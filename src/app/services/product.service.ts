@@ -1,59 +1,38 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, firstValueFrom } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { Product } from '../models/product';
+import { API_BASE_URL } from '../config/config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProductService {
 
-  private apiUrl = 'https://localhost:44361/api/products';
-
+  private apiUrl = `${API_BASE_URL}/products`;
 
   private productsSubject = new BehaviorSubject<Product[]>([]);
   products$ = this.productsSubject.asObservable();
 
   constructor(private http: HttpClient) {}
 
-  async loadProducts(): Promise<void> {
-    try {
-      const res = await firstValueFrom(this.http.get<Product[]>(this.apiUrl));
-      this.productsSubject.next(res);
-    } catch (err) {
-      console.error(err);
-      throw err;
-    }
+  loadProducts(): Observable<Product[]> {
+    return this.http.get<Product[]>(this.apiUrl);
   }
 
-  async add(product: Product): Promise<Product> {
-    try {
-      const created = await firstValueFrom(this.http.post<Product>(this.apiUrl, product));
-      this.loadProducts();
-      return created;
-    } catch (err) {
-      console.error(err);
-      throw err;
-    }
+  add(product: Product): Observable<Product> {
+    return this.http.post<Product>(this.apiUrl, product);
   }
 
-  async update(id: number, product: Product): Promise<void> {
-    try {
-      await firstValueFrom(this.http.put(`${this.apiUrl}/${id}`, product));
-      this.loadProducts();
-    } catch (err) {
-      console.error(err);
-      throw err;
-    }
+  update(id: number, product: Product): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${id}`, product);
   }
 
-  async delete(id: number): Promise<void> {
-    try {
-      await firstValueFrom(this.http.delete(`${this.apiUrl}/${id}`));
-      this.loadProducts();
-    } catch (err) {
-      console.error(err);
-      throw err;
-    }
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  updateProductsList(products: Product[]) {
+    this.productsSubject.next(products);
   }
 }

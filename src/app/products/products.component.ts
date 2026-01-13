@@ -1,74 +1,130 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { Router } from '@angular/router';
 import { Product } from '../models/product';
 import { ProductService } from '../services/product.service';
-import { Observable } from 'rxjs';
+import { AuthService } from '../services/auth.service';
+import { Observable, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-products',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
+    ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
-    MatButtonModule
+    MatButtonModule,
+    MatIconModule
   ],
   templateUrl: './products.component.html',
   styleUrls: ['./products.component.css']
 })
-export class ProductsComponent implements OnInit {
+export class ProductsComponent implements OnInit, OnDestroy {
 
   products$!: Observable<Product[]>;
 
-  name = '';
-  price: number | null = null;
+  form: FormGroup;
   editingId: number | null = null;
+  private subscriptions: Subscription[] = [];
 
-  constructor(private productService: ProductService) {}
+  constructor(
+    private productService: ProductService, 
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private router: Router
+  ) {
+    this.form = this.fb.group({
+      name: ['', Validators.required],
+      price: [null, [Validators.required, Validators.min(0)]]
+    });
+  }
 
   ngOnInit() {
-    this.products$ = this.productService.products$; 
-    this.productService.loadProducts();
+    this.products$ = this.productService.products$;
+    this.loadProducts();
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   save() {
-    if (!this.name || this.price === null) return;
+    if (this.form.valid) {
+      const { name, price } = this.form.value;
 
-    if (this.editingId) {
-      this.productService.update(this.editingId, {
-        id: this.editingId,
-        name: this.name,
-        price: this.price
-      });
+      if (this.editingId) {
+        this.subscriptions.push(
+          this.productService.update(this.editingId, {
+            id: this.editingId,
+            name,
+            price
+          }).subscribe({
+            next: () => {
+              this.loadProducts();
+              this.reset();
+            },
+            error: (err) => console.error('Error updating product:', err)
+          })
+        );
+      } else {
+        this.subscriptions.push(
+          this.productService.add({
+            id: 0,
+            name,
+            price
+          }).subscribe({
+            next: (created) => {
+              this.loadProducts();
+              this.reset();
+            },
+            error: (err) => console.error('Error adding product:', err)
+          })
+        );
+      }
     } else {
-      this.productService.add({
-        id: 0,
-        name: this.name,
-        price: this.price
-      });
+      this.form.markAllAsTouched();
     }
-
-    this.reset();
   }
 
   edit(p: Product) {
     this.editingId = p.id;
-    this.name = p.name;
-    this.price = p.price;
+    this.form.patchValue({
+      name: p.name,
+      price: p.price
+    });
   }
 
   delete(id: number) {
-    this.productService.delete(id);
+    this.subscriptions.push(
+      this.productService.delete(id).subscribe({
+        next: () => this.loadProducts(),
+        error: (err) => console.error('Error deleting product:', err)
+      })
+    );
   }
 
   reset() {
-    this.name = '';
-    this.price = null;
+    this.form.reset();
     this.editingId = null;
+  }
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
+
+  private loadProducts() {
+    this.subscriptions.push(
+      this.productService.loadProducts().subscribe({
+        next: (products) => this.productService.updateProductsList(products),
+        error: (err) => console.error('Error loading products:', err)
+      })
+    );
   }
 }

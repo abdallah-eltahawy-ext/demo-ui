@@ -1,49 +1,78 @@
-<h2 class="title">Products</h2>
+<div class="products-container">
+  <!-- Header with Logout Button -->
+  <div class="header">
+    <h2>All Products</h2>
+    <button mat-raised-button color="warn" (click)="logout()" class="logout-btn">
+      <mat-icon>logout</mat-icon>
+      Logout
+    </button>
+  </div>
 
-<div class="form-container">
-  <mat-form-field appearance="outline">
-    <mat-label>Name</mat-label>
-    <input matInput [(ngModel)]="name" />
-  </mat-form-field>
+  <hr />
 
-  <mat-form-field appearance="outline">
-    <mat-label>Price</mat-label>
-    <input matInput type="number" [(ngModel)]="price" />
-  </mat-form-field>
-</div>
+  <!-- Product Form -->
+  <form [formGroup]="form" (ngSubmit)="save()" class="form-container">
+    <mat-form-field appearance="outline">
+      <mat-label>Product Name</mat-label>
+      <input matInput formControlName="name" placeholder="Enter product name" />
+      <mat-error *ngIf="form.get('name')?.hasError('required')">
+        Name is required
+      </mat-error>
+    </mat-form-field>
 
-<div class="actions">
-  <button mat-raised-button color="primary" (click)="save()">
-    {{ editingId ? 'Update Product' : 'Add Product' }}
-  </button>
+    <mat-form-field appearance="outline">
+      <mat-label>Price</mat-label>
+      <input matInput type="number" formControlName="price" placeholder="Enter price" />
+      <mat-error *ngIf="form.get('price')?.hasError('required')">
+        Price is required
+      </mat-error>
+      <mat-error *ngIf="form.get('price')?.hasError('min')">
+        Price must be positive
+      </mat-error>
+    </mat-form-field>
 
-  <button
-    *ngIf="editingId"
-    mat-stroked-button
-    color="warn"
-    (click)="reset()"
-  >
-    Cancel
-  </button>
-</div>
-
-<hr />
-
-<h3>All Products</h3>
-
-<ul class="product-list">
-  <li *ngFor="let p of products$ | async" class="product-item">
-    <span class="info">
-      {{ p.name }} – {{ p.price }} $
-    </span>
-
-    <span class="item-actions">
-      <button mat-button color="primary" (click)="edit(p)">
-        Edit
+    <div class="actions">
+      <button 
+        mat-raised-button 
+        color="primary" 
+        type="submit"
+        [disabled]="form.invalid">
+        <mat-icon>{{ editingId ? 'edit' : 'add' }}</mat-icon>
+        {{ editingId ? 'Update' : 'Save' }}
       </button>
-      <button mat-button color="warn" (click)="delete(p.id)">
-        Delete
+
+      <button 
+        mat-stroked-button 
+        color="warn" 
+        type="button"
+        (click)="reset()"
+        *ngIf="editingId">
+        <mat-icon>cancel</mat-icon>
+        Cancel
       </button>
-    </span>
-  </li>
-</ul>
+    </div>
+  </form>
+
+  <hr />
+
+  <!-- Products List -->
+  <h3>All Products</h3>
+
+  <ul class="product-list" *ngIf="products$ | async as products">
+    <li *ngFor="let p of products" class="product-item">
+      <span class="info">
+        {{ p.name }} | {{ p.price | currency }}
+      </span>
+      <span class="item-actions">
+        <button mat-button color="primary" (click)="edit(p)">
+          <mat-icon>edit</mat-icon>
+          Edit
+        </button>
+        <button mat-button color="warn" (click)="delete(p.id)">
+          <mat-icon>delete</mat-icon>
+          Delete
+        </button>
+      </span>
+    </li>
+  </ul>
+</div>
