@@ -1,0 +1,49 @@
+<h2 class="title">Products</h2>
+
+<div class="form-container">
+  <mat-form-field appearance="outline">
+    <mat-label>Name</mat-label>
+    <input matInput [(ngModel)]="name" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Price</mat-label>
+    <input matInput type="number" [(ngModel)]="price" />
+  </mat-form-field>
+</div>
+
+<div class="actions">
+  <button mat-raised-button color="primary" (click)="save()">
+    {{ editingId ? 'Update Product' : 'Add Product' }}
+  </button>
+
+  <button
+    *ngIf="editingId"
+    mat-stroked-button
+    color="warn"
+    (click)="reset()"
+  >
+    Cancel
+  </button>
+</div>
+
+<hr />
+
+<h3>All Products</h3>
+
+<ul class="product-list">
+  <li *ngFor="let p of products$ | async" class="product-item">
+    <span class="info">
+      {{ p.name }} – {{ p.price }} $
+    </span>
+
+    <span class="item-actions">
+      <button mat-button color="primary" (click)="edit(p)">
+        Edit
+      </button>
+      <button mat-button color="warn" (click)="delete(p.id)">
+        Delete
+      </button>
+    </span>
+  </li>
+</ul>

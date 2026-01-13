@@ -1,0 +1,37 @@
+.title {
+  margin-bottom: 16px;
+}
+
+.form-container {
+  display: flex;
+  gap: 16px;
+  max-width: 500px;
+}
+
+.actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 12px;
+}
+
+.product-list {
+  list-style: none;
+  padding: 0;
+  max-width: 500px;
+}
+
+.product-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.info {
+  font-weight: 500;
+}
+
+.item-actions button {
+  margin-left: 8px;
+}
