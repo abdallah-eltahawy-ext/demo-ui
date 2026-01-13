@@ -36,7 +36,7 @@ export class LoginComponent {
       await this.authService.login(this.username, this.password);
       
       // Get return URL from query params or default to home
-      const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+      const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/products';
       this.router.navigate([returnUrl]);
     } catch (error: any) {
       this.errorMessage = error.message || 'Login failed. Please try again.';
